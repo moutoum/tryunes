@@ -1,0 +1,9 @@
+[package]
+name = "create_recipe"
+version = "0.1.0"
+authors = ["maxence.moutoussamy1 <maxence.moutoussamy1@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+reqwest = { version = "0.10", features = ["blocking", "json"] }
+serde_json = "1.0.57"
