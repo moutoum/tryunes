@@ -7,7 +7,8 @@ table! {
 }
 
 table! {
-    recipe_ingredients (recipe_id) {
+    recipe_ingredients (id) {
+        id -> Integer,
         recipe_id -> Integer,
         ingredient_id -> Integer,
         quantity -> Text,
@@ -15,8 +16,9 @@ table! {
 }
 
 table! {
-    recipe_steps (recipe_id) {
-        recipe_id -> Nullable<Integer>,
+    recipe_steps (id) {
+        id -> Integer,
+        recipe_id -> Integer,
         position -> Integer,
         step -> Text,
     }

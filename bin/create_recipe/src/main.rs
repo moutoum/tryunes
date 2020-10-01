@@ -36,7 +36,14 @@ fn main() -> Result<(), Box<dyn Error>> {
                 }
                 Ok(v)
             })?,
-        "steps": Vec::<String>::new(),
+        "steps": read::<u32>("Number of steps?")
+            .and_then(|range| {
+                let mut v = Vec::new();
+                for i in 0..range {
+                    v.push(read::<String>(format!("Step {}/{}: ", i, range).as_str())?)
+                }
+                Ok(v)
+            })?,
     });
 
     let client = reqwest::blocking::Client::new();
