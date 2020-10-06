@@ -1,35 +1,54 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
+import {Badge, Button, Card, CardColumns, Container, Nav, Navbar, Row} from "react-bootstrap";
 import {list} from "./services/recipes";
-import Recipes from "./components/Recipes";
-import RecipePanel from "./components/RecipePanel";
+import {Col} from 'react-bootstrap';
 
 function App() {
     const [recipes, setRecipes] = useState<Array<Recipe>>([]);
-    const [showed, setShow] = useState(false);
-    const [selected, setSelected] = useState();
-    const handleRecipeClick = useCallback((recipeId: number) => {
-        if (selected === recipeId) {
-            setSelected(undefined);
-            setShow(false);
-        } else {
-            setSelected(recipeId);
-            setShow(true);
-        }
-    }, [setShow, selected]);
-
     useEffect(() => {
-        list().then((response) => setRecipes(response.data))
-    }, [])
+        list().then(response => setRecipes(response.data));
+    }, [setRecipes]);
 
-    return (
-        <>
-            <Recipes recipes={recipes} onRecipeClicked={handleRecipeClick} style={{ width: '70%'}}/>
-            {showed &&
-            <div style={{width: '30%', position: 'fixed', backgroundColor: "white", height: '100%', right: 0, top: 0}}>
-                {recipes.filter(({id}) => id === selected).map(recipe => <RecipePanel recipe={recipe} />)}
-            </div>}
-        </>
-    );
+    return <div>
+        <Navbar bg="light" expand="lg">
+            <Container>
+                <Navbar.Brand href="#home">Tryunes</Navbar.Brand>
+                <Nav className="mr-auto">
+                    <Nav.Link href="#home">Recipes</Nav.Link>
+                    <Nav.Link href="#link">Ingredients</Nav.Link>
+                </Nav>
+            </Container>
+        </Navbar>
+        <Container>
+            <CardColumns>
+                {recipes.map(recipe =>
+                    <Card>
+                        <Card.Body>
+                            <Card.Title>{recipe.name} <Badge
+                                variant={recipe.price > 10 ? "warning" : "info"}>{recipe.price} €</Badge></Card.Title>
+                            <Card.Text>{recipe.description}</Card.Text>
+                        </Card.Body>
+                        <Card.Img variant="top" src={recipe.image}/>
+                        <Card.Footer>
+                            <Row>
+                                <Col>
+                                    <small>
+                                        <div><b>Temps de preparation</b></div>
+                                        <div>{recipe.preparation_duration} min</div>
+                                    </small>
+                                </Col>
+                                <Col>
+                                    <small>
+                                        <div><b>Temps de cuisson</b></div>
+                                        <div>{recipe.cooking_duration} min</div>
+                                    </small>
+                                </Col>
+                            </Row>
+                        </Card.Footer>
+                    </Card>)}
+            </CardColumns>
+        </Container>
+    </div>
 }
 
 export default App;

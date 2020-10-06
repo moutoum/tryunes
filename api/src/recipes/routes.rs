@@ -4,7 +4,7 @@ use rocket_contrib::json::Json;
 
 use crate::{models, Storage};
 use crate::recipes::{RecipeIngredient, IngredientForm, Recipe, RecipeForm};
-use crate::recipes::helpers::{insert_recipe_ingredient, insert_recipe_steps};
+use crate::recipes::helpers::{insert_recipe_ingredient, insert_recipe_steps, get_recipe_ingredients};
 use itertools::Itertools;
 
 #[post("/recipes", format = "json", data = "<recipe_form>")]
@@ -65,31 +65,26 @@ pub fn list_recipes(connection: Storage) -> Json<Vec<Recipe>> {
     use crate::schema::{recipes, recipe_ingredients, recipe_steps, ingredients};
 
     let r = recipes::table.load::<models::Recipe>(&*connection).expect("could not load recipes");
-    let i = ingredients::table.inner_join(recipe_ingredients::table).load::<(models::Ingredient, models::RecipeIngredient)>(&*connection).expect("could not load ingredients");
-    let rs = models::RecipeStep::belonging_to(&r).order_by(recipe_steps::columns::position.asc()).load::<models::RecipeStep>(&*connection).expect("could not load recipe steps").grouped_by(&r);
-    let mut grouped: Vec<Vec<RecipeIngredient>> = Vec::new();
-    for (_, group) in &i.into_iter().group_by(|(_, ri)| ri.recipe_id) {
-        grouped.push(group.map(|(i, ri)| RecipeIngredient {
-            id: i.id,
-            name: i.name,
-            image: i.image.unwrap_or_default(),
-            quantity: ri.quantity,
-        }).collect());
-    }
 
-    let full_recipes = izip!(r, grouped, rs).map(|(recipe, ingredients, steps)| Recipe {
-        id: recipe.id,
-        name: recipe.name,
-        description: recipe.description,
-        image: recipe.image,
-        price: recipe.price,
-        preparation_duration: recipe.preparation_duration,
-        cooking_duration: recipe.cooking_duration,
-        creation_date: recipe.created_at,
-        last_update_date: recipe.updated_at,
-        ingredients,
-        steps: steps.into_iter().map(|rs| rs.step).collect(),
-    }).collect();
+    Json(r
+        .into_iter()
+        .map(|recipe| {
+            let i = get_recipe_ingredients(&*connection, &recipe);
 
-    Json(full_recipes)
+            Recipe {
+                id: recipe.id,
+                name: recipe.name,
+                description: recipe.description,
+                image: recipe.image,
+                price: recipe.price,
+                preparation_duration: recipe.preparation_duration,
+                cooking_duration: recipe.cooking_duration,
+                creation_date: recipe.created_at,
+                last_update_date: recipe.updated_at,
+                ingredients: i,
+                steps: vec![],
+            }
+        })
+        .collect()
+    )
 }
