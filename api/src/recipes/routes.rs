@@ -5,13 +5,16 @@ use rocket_contrib::json::Json;
 use crate::{models, Storage};
 use crate::recipes::{RecipeIngredient, IngredientForm, Recipe, RecipeForm};
 use crate::recipes::helpers::{insert_recipe_ingredient, insert_recipe_steps, get_recipe_ingredients};
+use crate::result::Result;
 use itertools::Itertools;
+use std::error::Error;
+use crate::models::RecipeStep;
 
 #[post("/recipes", format = "json", data = "<recipe_form>")]
-pub fn post_recipe(connection: Storage, recipe_form: Json<RecipeForm>) -> Json<Recipe> {
+pub fn post_recipe(connection: Storage, recipe_form: Json<RecipeForm>) -> std::result::Result<Json<Recipe>, Box<dyn Error>> {
     use crate::schema::{recipes};
 
-    let new_recipe = connection.transaction::<_, diesel::result::Error, _>(|| {
+    connection.transaction::<_, Box<dyn Error>, _>(|| {
         let recipe = models::RecipeForm {
             name: recipe_form.name.clone(),
             description: recipe_form.description.clone(),
@@ -24,8 +27,7 @@ pub fn post_recipe(connection: Storage, recipe_form: Json<RecipeForm>) -> Json<R
         insert_into(recipes::table).values(&recipe).execute(&*connection)?;
         let recipe = recipes::table
             .order(recipes::columns::id.desc())
-            .first::<models::Recipe>(&*connection)
-            .expect("Could not find recipe");
+            .first::<models::Recipe>(&*connection)?;
 
         let ingredients = recipe_form.ingredients
             .iter()
@@ -47,9 +49,7 @@ pub fn post_recipe(connection: Storage, recipe_form: Json<RecipeForm>) -> Json<R
             ingredients,
             steps,
         });
-    }).expect("could not insert recipe");
-
-    Json(new_recipe)
+    }).and_then(|recipe| Ok(Json(recipe)))
 }
 
 #[post("/recipes/<recipe_id>/ingredients", format = "json", data = "<ingredient_form>")]
@@ -61,17 +61,23 @@ pub fn post_ingredient(connection: Storage, recipe_id: i32, ingredient_form: Jso
 }
 
 #[get("/recipes")]
-pub fn list_recipes(connection: Storage) -> Json<Vec<Recipe>> {
-    use crate::schema::{recipes, recipe_ingredients, recipe_steps, ingredients};
+pub fn list_recipes(connection: Storage) -> Result<Json<Vec<Recipe>>> {
+    use crate::schema::{recipes, recipe_steps};
 
-    let r = recipes::table.load::<models::Recipe>(&*connection).expect("could not load recipes");
-
-    Json(r
+    recipes::table
+        .order_by(recipes::name.asc())
+        .load::<models::Recipe>(&*connection)?
         .into_iter()
         .map(|recipe| {
-            let i = get_recipe_ingredients(&*connection, &recipe);
+            let ingredients = get_recipe_ingredients(&*connection, &recipe)?;
+            let steps = RecipeStep::belonging_to(&recipe)
+                .order_by(recipe_steps::position)
+                .load(&*connection)?
+                .into_iter()
+                .map(|RecipeStep { step, .. }| step)
+                .collect();
 
-            Recipe {
+            Ok(Recipe {
                 id: recipe.id,
                 name: recipe.name,
                 description: recipe.description,
@@ -81,10 +87,13 @@ pub fn list_recipes(connection: Storage) -> Json<Vec<Recipe>> {
                 cooking_duration: recipe.cooking_duration,
                 creation_date: recipe.created_at,
                 last_update_date: recipe.updated_at,
-                ingredients: i,
-                steps: vec![],
-            }
+                ingredients,
+                steps,
+            })
         })
-        .collect()
-    )
+        .fold_results(vec![], |mut acc, recipe| {
+            acc.push(recipe);
+            acc
+        })
+        .and_then(|recipes| Ok(Json(recipes)))
 }

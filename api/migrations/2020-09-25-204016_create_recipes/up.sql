@@ -1,8 +1,8 @@
 CREATE TABLE recipes (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
-    description TEXT,
-    image TEXT,
+    description TEXT NOT NULL,
+    image TEXT NOT NULL,
     price REAL NOT NULL DEFAULT 0,
     preparation_duration BIGINT NOT NULL DEFAULT 0,
     cooking_duration BIGINT NOT NULL DEFAULT 0,

@@ -2,7 +2,8 @@ use diesel::*;
 use rocket_contrib::databases::diesel::SqliteConnection;
 
 use crate::models;
-use crate::recipes::{RecipeIngredient, IngredientForm, Recipe};
+use crate::recipes::{IngredientForm, RecipeIngredient};
+use crate::result::Result;
 
 pub fn insert_recipe_ingredient(connection: &SqliteConnection, recipe_id: i32, ingredient_form: &IngredientForm) -> RecipeIngredient
 {
@@ -61,23 +62,25 @@ pub fn insert_recipe_steps(connection: &SqliteConnection, recipe_id: i32, steps:
         .expect("could not select recipe steps")
 }
 
-pub fn get_recipe_ingredients(connection: &SqliteConnection, recipe: &models::Recipe) -> Vec<RecipeIngredient> {
+pub fn get_recipe_ingredients(connection: &SqliteConnection, recipe: &models::Recipe) -> Result<Vec<RecipeIngredient>> {
     use crate::schema::{ingredients};
 
-    models::RecipeIngredient::belonging_to(recipe)
-        .inner_join(ingredients::table)
-        .load::<(models::RecipeIngredient, models::Ingredient)>(connection)
-        .expect("could not load recipe ingredients")
-        .into_iter()
-        .map(|(ri, i)| RecipeIngredient{
-            id: i.id,
-            name: i.name,
-            image: i.image.unwrap_or_default(),
-            quantity: ri.quantity
-        })
-        .collect()
+    Ok(
+        models::RecipeIngredient::belonging_to(recipe)
+            .inner_join(ingredients::table)
+            .load::<(models::RecipeIngredient, models::Ingredient)>(connection)?
+            .into_iter()
+            .map(|(ri, i)| RecipeIngredient {
+                id: i.id,
+                name: i.name,
+                image: i.image.unwrap_or_default(),
+                quantity: ri.quantity,
+            })
+            .collect()
+    )
 }
 
+#[cfg(test)]
 mod test {
     use diesel::SqliteConnection;
     use super::get_recipe_ingredients;

@@ -1,7 +1,8 @@
 import React, {useEffect, useState} from 'react';
-import {Badge, Button, Card, CardColumns, Container, Nav, Navbar, Row} from "react-bootstrap";
+import {CardColumns, Container, Nav, Navbar} from "react-bootstrap";
 import {list} from "./services/recipes";
-import {Col} from 'react-bootstrap';
+import RecipeCard from './components/RecipeCard';
+import {BrowserRouter, Redirect, Route, Switch} from "react-router-dom";
 
 function App() {
     const [recipes, setRecipes] = useState<Array<Recipe>>([]);
@@ -10,43 +11,27 @@ function App() {
     }, [setRecipes]);
 
     return <div>
-        <Navbar bg="light" expand="lg">
+        <Navbar bg="light" expand="lg" sticky="top">
             <Container>
-                <Navbar.Brand href="#home">Tryunes</Navbar.Brand>
+                <Navbar.Brand href="/">Tryunes</Navbar.Brand>
                 <Nav className="mr-auto">
-                    <Nav.Link href="#home">Recipes</Nav.Link>
-                    <Nav.Link href="#link">Ingredients</Nav.Link>
+                    <Nav.Link href="/recipes">Recettes</Nav.Link>
+                    <Nav.Link>Ingredients</Nav.Link>
                 </Nav>
             </Container>
         </Navbar>
         <Container>
-            <CardColumns>
-                {recipes.map(recipe =>
-                    <Card>
-                        <Card.Body>
-                            <Card.Title>{recipe.name} <Badge
-                                variant={recipe.price > 10 ? "warning" : "info"}>{recipe.price} €</Badge></Card.Title>
-                            <Card.Text>{recipe.description}</Card.Text>
-                        </Card.Body>
-                        <Card.Img variant="top" src={recipe.image}/>
-                        <Card.Footer>
-                            <Row>
-                                <Col>
-                                    <small>
-                                        <div><b>Temps de preparation</b></div>
-                                        <div>{recipe.preparation_duration} min</div>
-                                    </small>
-                                </Col>
-                                <Col>
-                                    <small>
-                                        <div><b>Temps de cuisson</b></div>
-                                        <div>{recipe.cooking_duration} min</div>
-                                    </small>
-                                </Col>
-                            </Row>
-                        </Card.Footer>
-                    </Card>)}
-            </CardColumns>
+            <BrowserRouter>
+                <Switch>
+                    <Route exact path="/" render={() => <Redirect to="/recipes" />} />
+                    <Route exact path="/recipes">
+                        <CardColumns style={{marginTop: '1em'}}>
+                            {recipes.map(recipe => <RecipeCard recipe={recipe}/>)}
+                        </CardColumns>
+                    </Route>
+                </Switch>
+            </BrowserRouter>
+
         </Container>
     </div>
 }

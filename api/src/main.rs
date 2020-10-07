@@ -2,51 +2,27 @@
 
 #[macro_use]
 extern crate diesel;
+extern crate itertools;
 #[macro_use]
 extern crate rocket;
 #[macro_use]
 extern crate rocket_contrib;
-#[macro_use]
-extern crate itertools;
 
-use chrono::NaiveDateTime;
 use diesel::insert_into;
 use diesel::prelude::*;
 use rocket::fairing::AdHoc;
 use rocket_contrib::databases::diesel::SqliteConnection;
 use rocket_contrib::json::Json;
-use serde::Serialize;
 
 pub mod schema;
 pub mod models;
-mod recipes;
+pub mod recipes;
+pub mod result;
+
 
 #[database("sqlite")]
 #[derive(Copy)]
 pub struct Storage(SqliteConnection);
-
-#[derive(Serialize)]
-struct Recipe {
-    id: i32,
-    name: String,
-    description: Option<String>,
-    image: Option<String>,
-    price: f32,
-    preparation_duration: i64,
-    cooking_duration: i64,
-    creation_date: NaiveDateTime,
-    last_update_date: NaiveDateTime,
-    ingredients: Vec<RecipeIngredient>,
-    steps: Vec<String>,
-}
-
-#[derive(Serialize, Debug)]
-struct RecipeIngredient {
-    id: i32,
-    name: String,
-    image: String,
-    quantity: String,
-}
 
 #[post("/ingredients", format = "json", data = "<ingredient_form>")]
 fn post_ingredient(connection: Storage, ingredient_form: Json<models::IngredientForm>) -> Json<models::Ingredient> {

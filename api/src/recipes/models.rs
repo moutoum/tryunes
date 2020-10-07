@@ -5,8 +5,8 @@ use serde::{Serialize};
 pub struct Recipe {
     pub id: i32,
     pub name: String,
-    pub description: Option<String>,
-    pub image: Option<String>,
+    pub description: String,
+    pub image: String,
     pub price: f32,
     pub preparation_duration: i64,
     pub cooking_duration: i64,
@@ -30,8 +30,8 @@ pub mod forms {
     #[derive(Deserialize)]
     pub struct Recipe {
         pub name: String,
-        pub description: Option<String>,
-        pub image: Option<String>,
+        pub description: String,
+        pub image: String,
         pub price: f32,
         pub preparation_duration: i64,
         pub cooking_duration: i64,

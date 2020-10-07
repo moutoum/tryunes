@@ -28,8 +28,8 @@ table! {
     recipes (id) {
         id -> Integer,
         name -> Text,
-        description -> Nullable<Text>,
-        image -> Nullable<Text>,
+        description -> Text,
+        image -> Text,
         price -> Float,
         preparation_duration -> BigInt,
         cooking_duration -> BigInt,
