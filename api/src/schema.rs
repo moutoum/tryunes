@@ -7,7 +7,8 @@ table! {
 }
 
 table! {
-    recipe_ingredients (recipe_id) {
+    recipe_ingredients (id) {
+        id -> Integer,
         recipe_id -> Integer,
         ingredient_id -> Integer,
         quantity -> Text,
@@ -15,8 +16,9 @@ table! {
 }
 
 table! {
-    recipe_steps (recipe_id) {
-        recipe_id -> Nullable<Integer>,
+    recipe_steps (id) {
+        id -> Integer,
+        recipe_id -> Integer,
         position -> Integer,
         step -> Text,
     }
@@ -26,8 +28,8 @@ table! {
     recipes (id) {
         id -> Integer,
         name -> Text,
-        description -> Nullable<Text>,
-        image -> Nullable<Text>,
+        description -> Text,
+        image -> Text,
         price -> Float,
         preparation_duration -> BigInt,
         cooking_duration -> BigInt,
