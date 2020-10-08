@@ -1,38 +1,32 @@
-import React, {useEffect, useState} from 'react';
-import {CardColumns, Container, Nav, Navbar} from "react-bootstrap";
-import {list} from "./services/recipes";
-import RecipeCard from './components/RecipeCard';
+import React from 'react';
+import {Container, Nav, Navbar} from "react-bootstrap";
 import {BrowserRouter, Redirect, Route, Switch} from "react-router-dom";
+import {APIProvider} from "./providers/APIProvider";
+import RecipesPage from "./routes/RecipesPage";
+import IngredientsPage from "./routes/IngredientsPage";
 
 function App() {
-    const [recipes, setRecipes] = useState<Array<Recipe>>([]);
-    useEffect(() => {
-        list().then(response => setRecipes(response.data));
-    }, [setRecipes]);
-
     return <div>
-        <Navbar bg="light" expand="lg" sticky="top">
-            <Container>
-                <Navbar.Brand href="/">Tryunes</Navbar.Brand>
-                <Nav className="mr-auto">
-                    <Nav.Link href="/recipes">Recettes</Nav.Link>
-                    <Nav.Link>Ingredients</Nav.Link>
-                </Nav>
+        <APIProvider>
+            <Navbar bg="light" expand="lg" sticky="top">
+                <Container>
+                    <Navbar.Brand href="/">Tryunes</Navbar.Brand>
+                    <Nav className="mr-auto">
+                        <Nav.Link href="/recipes">Recettes</Nav.Link>
+                        <Nav.Link href="/ingredients">Ingredients</Nav.Link>
+                    </Nav>
+                </Container>
+            </Navbar>
+            <Container className="mt-3">
+                <BrowserRouter>
+                    <Switch>
+                        <Route exact path="/" render={() => <Redirect to="/recipes"/>}/>
+                        <Route exact path="/recipes" component={RecipesPage}/>
+                        <Route exact path="/ingredients" component={IngredientsPage}/>
+                    </Switch>
+                </BrowserRouter>
             </Container>
-        </Navbar>
-        <Container>
-            <BrowserRouter>
-                <Switch>
-                    <Route exact path="/" render={() => <Redirect to="/recipes" />} />
-                    <Route exact path="/recipes">
-                        <CardColumns style={{marginTop: '1em'}}>
-                            {recipes.map(recipe => <RecipeCard recipe={recipe}/>)}
-                        </CardColumns>
-                    </Route>
-                </Switch>
-            </BrowserRouter>
-
-        </Container>
+        </APIProvider>
     </div>
 }
 
