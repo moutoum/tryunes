@@ -18,3 +18,20 @@ interface Ingredient {
     image: string,
     quantity: string,
 }
+
+
+export type RecipeCreationForm = {
+    name: string,
+    description: string,
+    image: string,
+    price: number,
+    preparation_duration: number,
+    cooking_duration: number,
+    ingredients: Array<RecipeIngredient>,
+    steps: Array<string>,
+}
+
+export type RecipeIngredient = {
+    ingredient_id: number,
+    quantity: string,
+}

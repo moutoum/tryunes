@@ -1,5 +1,6 @@
 import React, {FC} from 'react';
 import {Badge, Card, Col, Row} from "react-bootstrap";
+import {Recipe} from '../models/recipes';
 
 interface Props {
     recipe: Recipe

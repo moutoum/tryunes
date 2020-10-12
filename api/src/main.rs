@@ -13,11 +13,14 @@ use diesel::prelude::*;
 use rocket::fairing::AdHoc;
 use rocket_contrib::databases::diesel::SqliteConnection;
 use rocket_contrib::json::Json;
+use rocket::http::{Method, ContentType, Status, Header};
+use std::io::Cursor;
 
 pub mod schema;
 pub mod models;
 pub mod recipes;
 pub mod result;
+pub mod ingredients;
 
 
 #[database("sqlite")]
@@ -36,14 +39,21 @@ fn post_ingredient(connection: Storage, ingredient_form: Json<models::Ingredient
 
 fn main() {
     rocket::ignite()
-        .attach(AdHoc::on_response("Apply CORS", |_, response| {
-            response.adjoin_raw_header("Access-Control-Allow-Origin", "*");
+        .attach(AdHoc::on_response("Apply CORS", |request, response| {
+            response.set_header(Header::new("Access-Control-Allow-Origin", "*"));
+            response.set_header(Header::new("Access-Control-Allow-Headers", "Content-Type"));
+            if request.method() == Method::Options {
+                response.set_status(Status::Ok);
+                response.set_header(ContentType::Plain);
+                response.set_sized_body(Cursor::new(""));
+            }
         }))
         .attach(Storage::fairing())
         .mount("/api", routes![
             recipes::routes::post_recipe,
             recipes::routes::post_ingredient,
             recipes::routes::list_recipes,
+            ingredients::routes::list_ingredients,
             post_ingredient
         ])
         .launch();
