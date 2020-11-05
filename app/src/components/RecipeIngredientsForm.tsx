@@ -1,10 +1,11 @@
-import React, {useCallback} from "react";
-import {Button, Col, Form} from "react-bootstrap";
+import React, {useCallback, useState} from "react";
+import {Button, Col, Form, Modal} from "react-bootstrap";
 import {FieldArrayRenderProps} from "formik";
 import useIngredients from "../hooks/useIngredients";
 import useIngredientsFetch from "../hooks/useIngredientsFetch";
 import {Trash} from "react-bootstrap-icons";
 import {RecipeIngredient} from "../models/recipes";
+import IngredientCreationForm from "./IngredientCreationForm";
 
 const initialRecipeIngredient: RecipeIngredient = {
     ingredient_id: 0,
@@ -22,6 +23,7 @@ const RecipeIngredientsForm: React.FC<FieldArrayRenderProps> = (props) => {
     const ingredientState = useIngredients();
     const removeIngredient = useCallback((index) => () => remove(index), [remove]);
     const insertIngredient = useCallback(() => push(initialRecipeIngredient), [push]);
+    const [show, setShow] = useState(false);
 
     useIngredientsFetch();
 
@@ -65,7 +67,16 @@ const RecipeIngredientsForm: React.FC<FieldArrayRenderProps> = (props) => {
                     </Col>
                 </Form.Row>
             ))}
-            <Button variant="outline-secondary" onClick={insertIngredient}>Ajouter</Button>
+            <div>
+                <Button variant="success" onClick={insertIngredient}>Ajouter un ingrédient à la recette</Button>
+                <Button variant="outline-secondary" className="ml-2" onClick={() => setShow(true)}>Créer un
+                    ingredient</Button>
+                <Modal show={show} onHide={() => setShow(false)} centered>
+                    <Modal.Header closeButton><Modal.Title>Création d'un ingrédient</Modal.Title></Modal.Header>
+                    <Modal.Body><IngredientCreationForm onCreate={() => {
+                    }}/></Modal.Body>
+                </Modal>
+            </div>
         </>
     )
 }

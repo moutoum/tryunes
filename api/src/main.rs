@@ -8,11 +8,8 @@ extern crate rocket;
 #[macro_use]
 extern crate rocket_contrib;
 
-use diesel::insert_into;
-use diesel::prelude::*;
 use rocket::fairing::AdHoc;
 use rocket_contrib::databases::diesel::SqliteConnection;
-use rocket_contrib::json::Json;
 use rocket::http::{Method, ContentType, Status, Header};
 use std::io::Cursor;
 
@@ -26,16 +23,6 @@ pub mod ingredients;
 #[database("sqlite")]
 #[derive(Copy)]
 pub struct Storage(SqliteConnection);
-
-#[post("/ingredients", format = "json", data = "<ingredient_form>")]
-fn post_ingredient(connection: Storage, ingredient_form: Json<models::IngredientForm>) -> Json<models::Ingredient> {
-    use schema::ingredients::dsl::*;
-    let new_ingredient = connection.transaction(|| {
-        insert_into(ingredients).values(ingredient_form.into_inner()).execute(&*connection)?;
-        ingredients.order(id.desc()).first::<models::Ingredient>(&*connection)
-    }).expect("could not insert ingredient");
-    Json(new_ingredient)
-}
 
 fn main() {
     rocket::ignite()
@@ -54,7 +41,7 @@ fn main() {
             recipes::routes::post_ingredient,
             recipes::routes::list_recipes,
             ingredients::routes::list_ingredients,
-            post_ingredient
+            ingredients::routes::create_ingredient,
         ])
         .launch();
 }
